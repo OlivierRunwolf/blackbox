@@ -7,16 +7,16 @@ namespace bb {
 // literals so the whole unit can be re-skinned from one place.
 namespace colours {
     // Lava palette: cooled basalt ground, molten core, purple heat at the edges.
-    const juce::Colour panel      { 0xff16121e };  // dark volcanic rock
-    const juce::Colour panelDark  { 0xff2a2138 };  // inset plate, lifted off the ground
+    const juce::Colour panel      { 0xff0a0810 };  // near-black basalt
+    const juce::Colour panelDark  { 0xff1b1526 };  // inset plate, still lifted off the ground
     const juce::Colour metalHi    { 0xff6b5a7a };  // lit stone edge
     const juce::Colour metalLo    { 0xff241c31 };  // stone in shadow
     const juce::Colour ink        { 0xfff5e3c0 };  // warm bone lettering
     const juce::Colour inkFaded   { 0xffa08ca8 };  // cooled purple-grey
     const juce::Colour indicator  { 0xffff9a24 };  // molten pointer
     const juce::Colour ember      { 0xffc0246a };  // magenta heat at the crust edge
-    const juce::Colour bezel      { 0xff08060c };  // deepest shadow
-    const juce::Colour screen     { 0xff1b0e10 };  // ember well
+    const juce::Colour bezel      { 0xff040309 };  // deepest shadow
+    const juce::Colour screen     { 0xff130a0d };  // ember well
     const juce::Colour screenGlow { 0xffffb43a };  // glowing readout
     const juce::Colour moltenHot  { 0xffffd86b };  // brightest part of the flow
     const juce::Colour moltenCool { 0xffff6a18 };  // where the flow darkens
