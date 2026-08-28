@@ -17,6 +17,13 @@ VintageLookAndFeel::VintageLookAndFeel()
     setColour (juce::Slider::textBoxTextColourId,         colours::ink);
     setColour (juce::Slider::textBoxBackgroundColourId,   juce::Colours::transparentBlack);
     setColour (juce::Slider::textBoxOutlineColourId,      juce::Colours::transparentBlack);
+    setColour (juce::TextEditor::backgroundColourId,      juce::Colours::transparentBlack);
+    setColour (juce::TextEditor::outlineColourId,         juce::Colours::transparentBlack);
+    setColour (juce::TextEditor::focusedOutlineColourId,  colours::indicator);
+    setColour (juce::TextEditor::textColourId,            colours::screenGlow);
+    setColour (juce::TextEditor::highlightColourId,       colours::indicator.withAlpha (0.30f));
+    setColour (juce::Label::backgroundColourId,           juce::Colours::transparentBlack);
+    setColour (juce::Slider::textBoxTextColourId,         colours::screenGlow);
     setColour (juce::TextButton::buttonColourId,          colours::panelDark);
     setColour (juce::ScrollBar::thumbColourId,            colours::inkFaded);
     setColour (juce::ScrollBar::trackColourId,            colours::panelDark);
@@ -36,13 +43,13 @@ void VintageLookAndFeel::positionComboBoxText (juce::ComboBox& box, juce::Label&
 juce::Font VintageLookAndFeel::getLabelFont (juce::Label& label)
 {
     return juce::Font (juce::FontOptions (juce::Font::getDefaultSerifFontName(),
-                                          (float) label.getHeight() * 0.72f, juce::Font::plain));
+                                          (float) label.getHeight() * 0.82f, juce::Font::plain));
 }
 
 juce::Font VintageLookAndFeel::getComboBoxFont (juce::ComboBox& box)
 {
     return juce::Font (juce::FontOptions (juce::Font::getDefaultSerifFontName(),
-                                          juce::jmin (12.5f, (float) box.getHeight() * 0.60f),
+                                          juce::jmin (14.0f, (float) box.getHeight() * 0.66f),
                                           juce::Font::plain));
 }
 
@@ -64,6 +71,22 @@ void VintageLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int 
         const juce::Line<float> tick (centre.getPointOnCircumference (inner, a),
                                       centre.getPointOnCircumference (outer, a));
         g.drawLine (tick, i % 5 == 0 ? 1.4f : 0.8f);
+    }
+
+    // Value arc - the molten flow around the dial. On a dark panel the pointer
+    // alone is hard to read; the arc gives the value a visible extent.
+    {
+        juce::Path arc;
+        arc.addCentredArc (centre.x, centre.y, radius * 0.90f, radius * 0.90f,
+                           0.0f, rotaryStartAngle, angle, true);
+
+        juce::ColourGradient flow (colours::moltenCool,
+                                   centre.getPointOnCircumference (radius, rotaryStartAngle),
+                                   colours::moltenHot,
+                                   centre.getPointOnCircumference (radius, angle), false);
+        g.setGradientFill (flow);
+        g.strokePath (arc, juce::PathStrokeType (2.6f, juce::PathStrokeType::curved,
+                                                 juce::PathStrokeType::rounded));
     }
 
     const float knobR = radius * 0.80f;
@@ -93,6 +116,12 @@ void VintageLookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int 
     const float pw = juce::jmax (2.0f, knobR * 0.13f);
     pointer.addRoundedRectangle (-pw * 0.5f, -knobR * 0.92f, pw, knobR * 0.55f, pw * 0.5f);
     pointer.applyTransform (juce::AffineTransform::rotation (angle).translated (centre));
+
+    if (slider.isEnabled())
+    {
+        g.setColour (colours::indicator.withAlpha (0.28f));
+        g.strokePath (pointer, juce::PathStrokeType (3.0f));
+    }
 
     g.setColour (slider.isEnabled() ? colours::indicator : colours::inkFaded);
     g.fillPath (pointer);
@@ -216,7 +245,7 @@ void VintageLookAndFeel::drawToggleButton (juce::Graphics& g, juce::ToggleButton
     }
 
     g.setColour (colours::ink);
-    g.setFont (juce::Font (juce::FontOptions (juce::Font::getDefaultSerifFontName(), 12.0f, juce::Font::plain)));
+    g.setFont (juce::Font (juce::FontOptions (juce::Font::getDefaultSerifFontName(), 13.0f, juce::Font::plain)));
     g.drawText (button.getButtonText(),
                 r.withTrimmedLeft (lampSize + 6.0f), juce::Justification::centredLeft, false);
 }
@@ -231,7 +260,7 @@ void VintageLookAndFeel::drawEngravedPanel (juce::Graphics& g, juce::Rectangle<f
     g.setColour (juce::Colours::black.withAlpha (0.22f));
     g.drawRoundedRectangle (r.reduced (0.5f), 4.0f, 1.0f);
 
-    g.setColour (colours::metalHi.withAlpha (0.45f));
+    g.setColour (colours::ember.withAlpha (0.28f));
     g.drawRoundedRectangle (r.reduced (0.5f).translated (0.0f, 1.0f), 4.0f, 0.8f);
 
     if (title.isNotEmpty())
@@ -239,7 +268,7 @@ void VintageLookAndFeel::drawEngravedPanel (juce::Graphics& g, juce::Rectangle<f
         auto header = r.removeFromTop (18.0f).reduced (8.0f, 2.0f);
         g.setColour (colours::ink.withAlpha (0.75f));
         g.setFont (juce::Font (juce::FontOptions (juce::Font::getDefaultSerifFontName(),
-                                                  11.0f, juce::Font::bold)));
+                                                  12.0f, juce::Font::bold)));
         // Letter-spaced caps, the way panel legends are actually printed.
         juce::String spaced;
         for (auto c : title) { spaced << c << ' '; }

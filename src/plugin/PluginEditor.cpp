@@ -23,7 +23,7 @@ void styleLegend (juce::Label& l, const juce::String& text)
     l.setInterceptsMouseClicks (false, false);
 }
 
-constexpr int kLegendHeight = 14;
+constexpr int kLegendHeight = 17;
 
 } // namespace
 
@@ -32,7 +32,7 @@ constexpr int kLegendHeight = 14;
 LabeledKnob::LabeledKnob (APVTS& state, const juce::String& paramId, const juce::String& text)
 {
     slider.setSliderStyle (juce::Slider::RotaryVerticalDrag);
-    slider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 64, 14);
+    slider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 72, 17);
     slider.setRotaryParameters (juce::MathConstants<float>::pi * 1.2f,
                                 juce::MathConstants<float>::pi * 2.8f, true);
     // A slow-drag modifier matters on a 20 Hz - 20 kHz cutoff knob.
@@ -218,7 +218,7 @@ BlackboxEditor::BlackboxEditor (BlackboxProcessor& p)
                          &unison, &lfoA, &lfoB, &global, &fx })
         addAndMakeVisible (panel);
 
-    setSize (1000, 664);
+    setSize (1000, 700);
     startTimerHz (12);
 }
 
@@ -245,10 +245,14 @@ void BlackboxEditor::drawNameplate (juce::Graphics& g, juce::Rectangle<float> r)
     g.setColour (colours::bezel);
     g.fillRoundedRectangle (r, 3.0f);
 
-    g.setColour (colours::metalLo.withAlpha (0.6f));
+    g.setColour (colours::ember.withAlpha (0.55f));
     g.drawRoundedRectangle (r.reduced (1.5f), 2.0f, 1.0f);
 
-    g.setColour (colours::panel);
+    // The lettering is the molten flow itself: hot at the top, cooling downward.
+    juce::ColourGradient molten (colours::moltenHot, r.getCentreX(), r.getY() + 4.0f,
+                                 colours::moltenCool, r.getCentreX(), r.getBottom() - 4.0f, false);
+    molten.addColour (0.55, colours::indicator);
+    g.setGradientFill (molten);
     g.setFont (juce::Font (juce::FontOptions (juce::Font::getDefaultSerifFontName(),
                                               r.getHeight() * 0.46f, juce::Font::bold)));
 
@@ -265,14 +269,20 @@ void BlackboxEditor::drawVoiceScreen (juce::Graphics& g, juce::Rectangle<float> 
     g.setColour (colours::screen);
     g.fillRoundedRectangle (r, 2.0f);
 
-    g.setColour (colours::screenGlow);
+    // A faint pool of heat behind the text, then the text itself.
+    juce::ColourGradient heat (colours::indicator.withAlpha (0.22f), r.getCentre(),
+                               juce::Colours::transparentBlack, r.getTopLeft(), true);
+    g.setGradientFill (heat);
+    g.fillRoundedRectangle (r, 2.0f);
+
     g.setFont (juce::Font (juce::FontOptions (juce::Font::getDefaultMonospacedFontName(),
-                                              r.getHeight() * 0.42f, juce::Font::plain)));
+                                              r.getHeight() * 0.46f, juce::Font::plain)));
+    g.setColour (colours::moltenHot);
     g.drawText ("VOICES " + juce::String (displayedVoices).paddedLeft ('0', 2),
                 r, juce::Justification::centred, false);
 
     // Faint scanline wash, so it reads as a lit display rather than a label.
-    g.setColour (juce::Colours::black.withAlpha (0.12f));
+    g.setColour (juce::Colours::black.withAlpha (0.06f));
     for (float y = r.getY(); y < r.getBottom(); y += 3.0f)
         g.drawHorizontalLine ((int) y, r.getX(), r.getRight());
 }
