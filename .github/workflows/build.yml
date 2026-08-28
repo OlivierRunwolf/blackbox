@@ -32,15 +32,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Configure
-        run: cmake -B build -G "Visual Studio 17 2022" -A x64
+        # Deliberately no -G: pinning a Visual Studio version breaks whenever
+        # the runner image rolls forward. CMake picks whichever VS is present.
+        run: cmake -B build
       - name: Build
         run: cmake --build build --config Release --parallel
       - name: Collect artifacts
         shell: bash
         run: |
           mkdir -p dist
-          cp -r build/BLACKBOX_artefacts/Release/VST3/BLACKBOX.vst3 dist/
-          cp -r build/BLACKBOX_artefacts/Release/Standalone/BLACKBOX.exe dist/
+          # Locate the outputs rather than assuming a layout, so a generator
+          # change cannot silently produce an empty artifact.
+          vst3=$(find build -name 'BLACKBOX.vst3' -print -quit)
+          exe=$(find build -name 'BLACKBOX.exe' -print -quit)
+          echo "vst3=$vst3"
+          echo "exe=$exe"
+          [ -n "$vst3" ] || { echo "::error::BLACKBOX.vst3 not found"; exit 1; }
+          [ -n "$exe" ]  || { echo "::error::BLACKBOX.exe not found";  exit 1; }
+          cp -r "$vst3" dist/
+          cp -r "$exe"  dist/
       - uses: actions/upload-artifact@v4
         with:
           name: BLACKBOX-windows
