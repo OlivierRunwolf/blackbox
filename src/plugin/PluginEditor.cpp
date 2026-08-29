@@ -242,25 +242,73 @@ void BlackboxEditor::timerCallback()
     }
 }
 
-void BlackboxEditor::drawNameplate (juce::Graphics& g, juce::Rectangle<float> r)
+void BlackboxEditor::drawNameplate (juce::Graphics& g, juce::Rectangle<float> bounds)
 {
-    g.setColour (colours::bezel);
-    g.fillRoundedRectangle (r, 3.0f);
+    // Pull the lettering out as an outline so it can be extruded and shaded
+    // like a piece of dimensional type, rather than drawn as flat text.
+    juce::GlyphArrangement glyphs;
+    juce::Font face (juce::FontOptions (juce::Font::getDefaultSansSerifFontName(),
+                                        bounds.getHeight() * 0.66f, juce::Font::bold));
 
-    g.setColour (colours::ember.withAlpha (0.55f));
-    g.drawRoundedRectangle (r.reduced (1.5f), 2.0f, 1.0f);
+    glyphs.addFittedText (face, "BLACKBOX",
+                          bounds.getX(), bounds.getY(), bounds.getWidth(), bounds.getHeight(),
+                          juce::Justification::centred, 1, 1.0f);
 
-    // The lettering is the molten flow itself: hot at the top, cooling downward.
-    juce::ColourGradient molten (colours::moltenHot, r.getCentreX(), r.getY() + 4.0f,
-                                 colours::moltenCool, r.getCentreX(), r.getBottom() - 4.0f, false);
-    molten.addColour (0.55, colours::indicator);
-    g.setGradientFill (molten);
-    g.setFont (juce::Font (juce::FontOptions (juce::Font::getDefaultSerifFontName(),
-                                              r.getHeight() * 0.46f, juce::Font::bold)));
+    juce::Path letters;
+    glyphs.createPath (letters);
 
-    juce::String spaced;
-    for (auto c : juce::String ("BLACKBOX")) { spaced << c << ' '; }
-    g.drawText (spaced.trim(), r, juce::Justification::centred, false);
+    if (letters.isEmpty())
+        return;
+
+    // Widen the forms a little - the reference letterforms are heavier than a
+    // stock bold - and sit them on the optical centre.
+    const auto lb = letters.getBounds();
+    letters.applyTransform (juce::AffineTransform::translation (-lb.getCentreX(), -lb.getCentreY())
+                                .scaled (1.12f, 1.06f)
+                                .translated (bounds.getCentreX(), bounds.getCentreY()));
+
+    // --- extrusion: repeated offsets down-right form the side walls ---
+    constexpr int depth = 7;
+    for (int i = depth; i >= 1; --i)
+    {
+        const float t = (float) i / (float) depth;
+        g.setColour (juce::Colour (0xff3a0d18).interpolatedWith (juce::Colour (0xff0d0509), t));
+        g.fillPath (letters, juce::AffineTransform::translation ((float) i * 0.9f, (float) i * 0.9f));
+    }
+
+    // --- face: a heat ramp running down the letterforms ---
+    const auto fb = letters.getBounds();
+    juce::ColourGradient metal (colours::moltenHot, fb.getCentreX(), fb.getY(),
+                                juce::Colour (0xff5c1840), fb.getCentreX(), fb.getBottom(), false);
+    metal.addColour (0.34, colours::indicator);
+    metal.addColour (0.60, colours::moltenCool);
+    metal.addColour (0.82, colours::ember);
+    g.setGradientFill (metal);
+    g.fillPath (letters);
+
+    // --- grain, clipped to the face, giving the gradient its tooth. The seed
+    // is fixed so the speckle stays put instead of crawling frame to frame. ---
+    {
+        juce::Graphics::ScopedSaveState save (g);
+
+        if (g.reduceClipRegion (letters, juce::AffineTransform()))
+        {
+            juce::Random rng (0x81acc0de);
+            for (int i = 0; i < 1400; ++i)
+            {
+                const float x = fb.getX() + rng.nextFloat() * fb.getWidth();
+                const float y = fb.getY() + rng.nextFloat() * fb.getHeight();
+                g.setColour ((rng.nextBool() ? juce::Colours::white : juce::Colours::black)
+                                 .withAlpha (0.04f + rng.nextFloat() * 0.10f));
+                g.fillRect (x, y, 1.0f, 1.0f);
+            }
+        }
+    }
+
+    // --- top rim catches the light ---
+    g.setColour (juce::Colour (0xffffeaa8).withAlpha (0.55f));
+    g.strokePath (letters, juce::PathStrokeType (0.9f),
+                  juce::AffineTransform::translation (0.0f, -0.7f));
 }
 
 void BlackboxEditor::drawVoiceScreen (juce::Graphics& g, juce::Rectangle<float> r)
@@ -308,10 +356,10 @@ void BlackboxEditor::paint (juce::Graphics& g)
     drawVoiceScreen (g, header.removeFromRight (170).reduced (0, 6).toFloat());
 
     // Centred on the window, not on the space left over beside the readout, so
-    // the plate sits on the panel's true centre line.
-    const auto plate = juce::Rectangle<int> (250, header.getHeight())
-                           .withCentre ({ getWidth() / 2, header.getCentreY() });
-    drawNameplate (g, plate.toFloat());
+    // the title sits on the panel's true centre line.
+    drawNameplate (g, juce::Rectangle<int> (300, header.getHeight())
+                          .withCentre ({ getWidth() / 2, header.getCentreY() })
+                          .toFloat());
 }
 
 void BlackboxEditor::resized()
