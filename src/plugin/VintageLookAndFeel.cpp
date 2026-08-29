@@ -254,7 +254,7 @@ void VintageLookAndFeel::drawEngravedPanel (juce::Graphics& g, juce::Rectangle<f
                                             const juce::String& title)
 {
     // Slightly darker inset plate with an engraved edge.
-    g.setColour (colours::panelDark.withAlpha (0.55f));
+    g.setColour (colours::panelDark.withAlpha (0.72f));
     g.fillRoundedRectangle (r, 4.0f);
 
     g.setColour (juce::Colours::black.withAlpha (0.22f));

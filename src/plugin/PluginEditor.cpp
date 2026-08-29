@@ -219,7 +219,7 @@ BlackboxEditor::BlackboxEditor (BlackboxProcessor& p)
         addAndMakeVisible (panel);
 
     setSize (1000, 700);
-    startTimerHz (12);
+    startTimerHz (bb::BackgroundFilm::frameRateHz);
 }
 
 BlackboxEditor::~BlackboxEditor()
@@ -229,13 +229,15 @@ BlackboxEditor::~BlackboxEditor()
 
 void BlackboxEditor::timerCallback()
 {
-    const int v = processor.activeVoices();
+    displayedVoices = processor.activeVoices();
 
-    // Only repaint when the reading actually changes - a 12 Hz full repaint of
-    // the whole panel would be wasteful for a two-digit counter.
-    if (v != displayedVoices)
+    if (! film->isEmpty())
     {
-        displayedVoices = v;
+        backdropFrame = (backdropFrame + 1) % film->numFrames();
+        repaint();     // the backdrop moves, so the whole face is dirty anyway
+    }
+    else
+    {
         repaint (getWidth() - 190, 8, 180, 48);
     }
 }
@@ -291,10 +293,16 @@ void BlackboxEditor::paint (juce::Graphics& g)
 {
     g.fillAll (colours::panel);
 
-    // Very light vertical brush texture across the whole face.
-    g.setColour (colours::panelDark.withAlpha (0.20f));
-    for (int x = 0; x < getWidth(); x += 3)
-        g.drawVerticalLine (x, 0.0f, (float) getHeight());
+    if (! film->isEmpty())
+    {
+        g.drawImage (film->frame (backdropFrame), getLocalBounds().toFloat(),
+                     juce::RectanglePlacement::fillDestination);
+
+        // A backdrop has to stay a backdrop: without this the particle field
+        // competes with the legends and the panel becomes hard to read.
+        g.setColour (colours::panel.withAlpha (0.45f));
+        g.fillAll();
+    }
 
     auto header = getLocalBounds().removeFromTop (60).reduced (10, 8);
     drawVoiceScreen (g, header.removeFromRight (170).reduced (0, 6).toFloat());

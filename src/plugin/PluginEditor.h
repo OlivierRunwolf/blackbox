@@ -2,6 +2,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "PluginProcessor.h"
 #include "VintageLookAndFeel.h"
+#include "BackgroundFilm.h"
 
 namespace bb {
 
@@ -88,6 +89,11 @@ private:
     bb::Panel filter { "FILTER", 6 }, ampEnv { "AMP ENV", 4 }, modEnv { "MOD ENV", 4 };
     bb::Panel unison { "UNISON", 3 }, lfoA { "LFO 1", 4 }, lfoB { "LFO 2", 4 };
     bb::Panel global { "GLOBAL", 4 }, fx { "EFFECTS", 3 };
+
+    // Shared across editor instances - decoding and recolouring the frames is
+    // not something to repeat every time a window opens.
+    juce::SharedResourcePointer<bb::BackgroundFilm> film;
+    int backdropFrame = 0;
 
     int displayedVoices = 0;
 

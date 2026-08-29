@@ -36,6 +36,15 @@ if(BLACKBOX_BUILD_PLUGIN)
         GIT_SHALLOW    TRUE)
     FetchContent_MakeAvailable(JUCE)
 
+    # Animated backdrop frames, compiled in so the plugin stays a single file.
+    file(GLOB BLACKBOX_BG_FRAMES CONFIGURE_DEPENDS
+         ${CMAKE_CURRENT_SOURCE_DIR}/resources/bg/*.png)
+
+    juce_add_binary_data(BlackboxAssets SOURCES ${BLACKBOX_BG_FRAMES})
+
+    # The plugin is a shared library, so the static data it links must be PIC.
+    set_target_properties(BlackboxAssets PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+
     juce_add_plugin(BLACKBOX
         COMPANY_NAME            "Blackbox Audio"
         PLUGIN_MANUFACTURER_CODE Bbdk
@@ -50,6 +59,7 @@ if(BLACKBOX_BUILD_PLUGIN)
         PRODUCT_NAME             "BLACKBOX")
 
     target_sources(BLACKBOX PRIVATE
+        src/plugin/BackgroundFilm.cpp
         src/plugin/PluginProcessor.cpp
         src/plugin/PluginEditor.cpp
         src/plugin/ParameterLayout.cpp
@@ -62,6 +72,7 @@ if(BLACKBOX_BUILD_PLUGIN)
         JUCE_DISPLAY_SPLASH_SCREEN=0)
 
     target_link_libraries(BLACKBOX PRIVATE
+        BlackboxAssets
         bb_dsp
         juce::juce_audio_utils
         juce::juce_dsp
