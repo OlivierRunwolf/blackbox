@@ -253,15 +253,16 @@ void VintageLookAndFeel::drawToggleButton (juce::Graphics& g, juce::ToggleButton
 void VintageLookAndFeel::drawEngravedPanel (juce::Graphics& g, juce::Rectangle<float> r,
                                             const juce::String& title)
 {
-    // Slightly darker inset plate with an engraved edge.
-    g.setColour (colours::panelDark.withAlpha (0.72f));
+    // Barely-there tint so the backdrop reads through the plate, with the edge
+    // carrying the definition instead of the fill.
+    g.setColour (colours::panelDark.withAlpha (0.34f));
     g.fillRoundedRectangle (r, 4.0f);
 
-    g.setColour (juce::Colours::black.withAlpha (0.22f));
-    g.drawRoundedRectangle (r.reduced (0.5f), 4.0f, 1.0f);
+    g.setColour (juce::Colours::black.withAlpha (0.45f));
+    g.drawRoundedRectangle (r.reduced (0.5f), 4.0f, 1.2f);
 
-    g.setColour (colours::ember.withAlpha (0.28f));
-    g.drawRoundedRectangle (r.reduced (0.5f).translated (0.0f, 1.0f), 4.0f, 0.8f);
+    g.setColour (colours::ember.withAlpha (0.55f));
+    g.drawRoundedRectangle (r.reduced (0.5f).translated (0.0f, 1.0f), 4.0f, 1.0f);
 
     if (title.isNotEmpty())
     {
